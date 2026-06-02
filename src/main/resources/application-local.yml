@@ -1,0 +1,23 @@
+# =============================================================================
+# Local development profile — overrides application.yml
+# Run with: SPRING_PROFILES_ACTIVE=local ./mvnw spring-boot:run
+#
+# Starts a local ES via Docker:
+#   docker run -p 9200:9200 -e "discovery.type=single-node" \
+#     -e "xpack.security.enabled=false" \
+#     docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+# =============================================================================
+
+elastic:
+  cloud:
+    cloud-id: ""          # not used in local mode; ElasticsearchConfig detects this
+    api-key: ""
+
+spring:
+  elasticsearch:
+    uris: http://localhost:9200
+
+logging:
+  level:
+    org.springframework.data.elasticsearch: DEBUG
+    co.elastic.clients: DEBUG

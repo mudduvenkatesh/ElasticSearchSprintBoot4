@@ -1,0 +1,59 @@
+# =============================================================================
+# Elastic Cloud (SaaS) — connection properties
+#
+# All secrets are read from environment variables so nothing sensitive is ever
+# committed to source control. Set them in your shell, Docker environment,
+# Kubernetes Secret, or CI/CD secret store.
+#
+# Where to find each value in the Elastic Cloud console:
+#   Cloud ID  → Deployments → <your deployment> → "Copy Cloud ID"
+#   API Key   → Kibana → Stack Management → API Keys → "Create API key"
+#               The value shown is already the base64-encoded id:key string.
+#   Endpoint  → Deployments → <deployment> → Elasticsearch → "Copy endpoint"
+# =============================================================================
+
+elastic:
+  cloud:
+    # Full Cloud ID string — e.g.
+    # my-cluster:dXMtZWFzdC0xLmF3cy5mb3VuZC5pbyRhYmMxMjMkZGVmNDU2
+    cloud-id: ${ELASTIC_CLOUD_ID}
+
+    # API key (recommended over username/password for production)
+    api-key: ${ELASTIC_API_KEY}
+
+    # Basic-auth fallback — only used when api-key is blank
+    # username: ${ELASTIC_USERNAME:elastic}
+    # password: ${ELASTIC_PASSWORD}
+
+    # Tune timeouts for Elastic Cloud latency (Cloud adds ~20-50 ms vs local)
+    connection-timeout-seconds: 10
+    socket-timeout-seconds: 60
+
+# Spring Data Elasticsearch needs the HTTPS endpoint for its own health-check
+# binding. The custom ElasticsearchClient bean above resolves the real host
+# from the Cloud ID at startup; this entry keeps auto-configuration happy.
+spring:
+  elasticsearch:
+    uris: ${ELASTIC_ENDPOINT:https://localhost:9243}
+    api-key: ${ELASTIC_API_KEY}
+
+  # Pretty JSON responses in development (remove in production)
+  jackson:
+    serialization:
+      indent-output: true
+
+# Actuator — expose health and info endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.example.search: DEBUG
+    org.springframework.data.elasticsearch: INFO
+    co.elastic.clients: DEBUG

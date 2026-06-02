@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>4.0.6</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>elasticsearch-springboot</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
+    <name>elasticsearch-springboot</name>
+    <description>Spring Boot 4.0.6 + Elasticsearch Java Client 9.x + Elastic Cloud (SaaS)</description>
+
+    <properties>
+        <java.version>21</java.version>
+        <!--
+            Spring Boot 4.0.6 manages Elasticsearch Client 9.x via its BOM.
+            Uncomment and set this only to pin a specific patch version.
+        -->
+        <!-- <elasticsearch.version>9.1.0</elasticsearch.version> -->
+        <!--
+            Testcontainers 2.x is managed here because:
+              - Spring Boot 4.x no longer defines ${testcontainers.version}
+              - Testcontainers 2.0 renamed all modules with a "testcontainers-"
+                prefix, so the old 1.x property name no longer applies.
+            Latest stable: 2.0.5
+        -->
+        <testcontainers2.version>2.0.5</testcontainers2.version>
+    </properties>
+    <!--
+        Import the Testcontainers BOM inside dependencyManagement so that
+        ALL org.testcontainers:* modules (including :elasticsearch) get their
+        version resolved automatically — no <version> tag needed on each one.
+
+        The Spring Boot BOM manages only testcontainers:testcontainers and
+        testcontainers:junit-jupiter. Every other Testcontainers module
+        (kafka, elasticsearch, postgres, etc.) requires the TC BOM explicitly.
+        ${testcontainers.version} is a property provided by spring-boot-parent.
+    -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers2.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+
+    <dependencies>
+
+        <!-- Web -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            Spring Data Elasticsearch — brings in transitively:
+              spring-data-elasticsearch  (@Document, repositories)
+              elasticsearch-java 9.x     (ElasticsearchClient, Java API)
+
+            In the 9.x client, the new Rest5Client (HttpClient 5 native) is
+            the default transport. The legacy elasticsearch-rest-client
+            (HttpClient 4 based) is now OPTIONAL and NOT needed here.
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+        </dependency>
+
+        <!--
+            HttpClient 5 — required by Rest5Client for HTTPS to Elastic Cloud.
+            Version is BOM-managed.
+        -->
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
+
+        <!-- Actuator — /actuator/health, /actuator/metrics -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Lombok — compile-time only -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- IDE autocompletion for @ConfigurationProperties -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--
+            Testcontainers 2.x Elasticsearch module.
+
+            NOTE: In Testcontainers 2.0, ALL modules were renamed with the
+            "testcontainers-" prefix. The old 1.x artifact
+            org.testcontainers:elasticsearch no longer exists.
+            The correct 2.x artifact is: testcontainers-elasticsearch
+
+            Version resolved from the testcontainers-bom imported above.
+        -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-elasticsearch</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!--
+            spring-boot-testcontainers: Spring Boot auto-configuration for
+            Testcontainers (managed by Spring Boot BOM, no version needed).
+        -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+
+        <!-- junit-jupiter integration for Testcontainers (also BOM-managed) -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+    <build>
+        <plugins>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>21</source>
+                    <target>21</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.springframework.boot</groupId>
+                            <artifactId>spring-boot-configuration-processor</artifactId>
+                            <version>${project.parent.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>
