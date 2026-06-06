@@ -11,15 +11,16 @@
 #               The value shown is already the base64-encoded id:key string.
 #   Endpoint  → Deployments → <deployment> → Elasticsearch → "Copy endpoint"
 # =============================================================================
-
+server:
+  port: 22222
 elastic:
   cloud:
     # Full Cloud ID string — e.g.
     # my-cluster:dXMtZWFzdC0xLmF3cy5mb3VuZC5pbyRhYmMxMjMkZGVmNDU2
-    cloud-id: ${ELASTIC_CLOUD_ID}
+    cloud-id: ${ELASTIC_CLOUD_ID:ontollogix-es-dev:dXMtY2VudHJhbDEuZ2NwLmNsb3VkLmVzLmlvOjQ0MyRkZTZjYTljODIxZTA0OWFlYjI3NTUwOTY1ZDFhYTJjMSQ0ZWQzNDM4OTY4MDc0Mjg2YTNlMGE5OTRiYWI1OWNjNw==}
 
     # API key (recommended over username/password for production)
-    api-key: ${ELASTIC_API_KEY}
+    api-key: ${ELASTIC_API_KEY:dnN5OG1KNEI2QTluVGUtOGZZNF86a1F1Mk1Rc1UyMjhsMHFsa2tKNjdKQQ==}
 
     # Basic-auth fallback — only used when api-key is blank
     # username: ${ELASTIC_USERNAME:elastic}
@@ -28,14 +29,26 @@ elastic:
     # Tune timeouts for Elastic Cloud latency (Cloud adds ~20-50 ms vs local)
     connection-timeout-seconds: 10
     socket-timeout-seconds: 60
+  app:
+    elasticsearch:
+      # Index name for DQ violation triage documents
+      index-name: dq-violation-triage
+      # Number of shards/replicas for the index
+      number-of-shards: 1
+      number-of-replicas: 1
+      # Bulk operation settings
+      bulk:
+        batch-size: 100
+        refresh-policy: WAIT_UNTIL   # IMMEDIATE | WAIT_UNTIL | NONE
+
 
 # Spring Data Elasticsearch needs the HTTPS endpoint for its own health-check
 # binding. The custom ElasticsearchClient bean above resolves the real host
 # from the Cloud ID at startup; this entry keeps auto-configuration happy.
 spring:
   elasticsearch:
-    uris: ${ELASTIC_ENDPOINT:https://localhost:9243}
-    api-key: ${ELASTIC_API_KEY}
+    uris: ${ELASTIC_ENDPOINT:https://ontollogix-es-dev-218bf3.es.us-central1.gcp.cloud.es.io}
+    api-key: ${elastic.cloud.api-key. }
 
   # Pretty JSON responses in development (remove in production)
   jackson:
@@ -52,8 +65,10 @@ management:
     health:
       show-details: always
 
+
 logging:
   level:
     com.example.search: DEBUG
     org.springframework.data.elasticsearch: INFO
     co.elastic.clients: DEBUG
+

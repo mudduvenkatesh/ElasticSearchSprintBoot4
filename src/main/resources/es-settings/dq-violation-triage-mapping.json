@@ -1,0 +1,47 @@
+{
+  "properties": {
+    "uniqueTriageId":       { "type": "keyword" },
+    "trackingId":           { "type": "keyword" },
+    "scoreCardSubject":     { "type": "keyword" },
+    "extractDateTime":      { "type": "date",    "format": "strict_date_hour_minute_second" },
+    "businessReason":       { "type": "text",    "analyzer": "standard" },
+    "workflowId":           { "type": "keyword" },
+    "workflowStartTime":    { "type": "date",    "format": "strict_date_hour_minute_second" },
+    "workflowEndTime":      { "type": "date",    "format": "strict_date_hour_minute_second" },
+    "dataSteward":          { "type": "keyword" },
+    "dataCustodian":        { "type": "keyword" },
+    "dataOwner":            { "type": "keyword" },
+    "totalViolatedRules":   { "type": "integer" },
+    "totalOffendingRecords":{ "type": "integer" },
+    "indexedAt":            { "type": "date",    "format": "strict_date_hour_minute_second" },
+
+    "violatedRules": {
+      "type": "object",
+      "properties": {
+        "ruleExecutionSubject":     { "type": "keyword" },
+        "offendingRuleSubject":     { "type": "keyword" },
+        "offendingRuleLabel":       { "type": "text",    "analyzer": "standard" },
+        "offendingRuleLabelKeyword":{ "type": "keyword" },
+        "offendingRecordCount":     { "type": "integer" },
+
+        "offendingRecords": {
+          "type": "nested",
+          "properties": {
+            "dataRecordSubject": { "type": "keyword" },
+            "dqRuleSubject":     { "type": "keyword" },
+            "dataRecordId":      { "type": "keyword" },
+            "dqErrorPropertyValue": {
+              "type": "object",
+              "properties": {
+                "predicateIRI":     { "type": "keyword" },
+                "stringValue":      { "type": "keyword" },
+                "obfuscated":       { "type": "boolean" },
+                "errorDescription": { "type": "text", "analyzer": "standard" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

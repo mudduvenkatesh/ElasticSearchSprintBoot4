@@ -65,6 +65,7 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
         }
 
         // Decode Cloud ID to "host:port" string expected by ClientConfiguration
+        log.debug("Calling decodeCloudId {}",props.cloudId());
         String hostAndPort = decodeCloudIdToHostPort(props.cloudId());
         log.info("Connecting to Elastic Cloud: https://{}", hostAndPort);
 
@@ -77,7 +78,7 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
         // ---- Authentication ------------------------------------------------
         if (props.hasApiKey()) {
             // API key: base64-encoded "id:api_key" string from Kibana
-            log.info("Elastic Cloud auth: API key");
+            log.info("Elastic Cloud auth: API key {}",props.apiKey());
             builder.withDefaultHeaders(
                     new org.springframework.data.elasticsearch.support.HttpHeaders() {{
                         add("Authorization", "ApiKey " + props.apiKey());
@@ -111,6 +112,7 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
      */
     public static String decodeCloudIdToHostPort(String cloudId) {
         String[] top = cloudId.split(":", 2);
+        log.debug("top={}",top);
         if (top.length != 2) {
             throw new IllegalArgumentException(
                     "Invalid Cloud ID (missing colon separator): " + cloudId);
@@ -124,9 +126,11 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
 
         String parentHost = segs[0];
         String esUuid     = segs[1];
+        log.debug("parent Host={}, esUuid={}",parentHost,esUuid);
 
         // Parent host may embed a port: "us-east-1.aws.found.io:443"
         String[] hostParts = parentHost.split(":", 2);
+        log.debug("hostParts={}",hostParts);
         String host = esUuid + "." + hostParts[0];
         String port = (hostParts.length > 1) ? hostParts[1] : "443";
 

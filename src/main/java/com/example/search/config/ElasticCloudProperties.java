@@ -15,7 +15,10 @@ public record ElasticCloudProperties(
     String username,
     String password,
     int connectionTimeoutSeconds,
-    int socketTimeoutSeconds
+    int socketTimeoutSeconds,
+    String indexName
+
+
 ) {
     public ElasticCloudProperties {
         username = (username == null) ? "elastic" : username;

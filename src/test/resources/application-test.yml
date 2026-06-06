@@ -1,0 +1,20 @@
+spring:
+  elasticsearch:
+    uris: http://localhost:9200
+    username:
+    password:
+    cloud-id:
+
+app:
+  elasticsearch:
+    index-name: dq-violation-triage-test
+    number-of-shards: 1
+    number-of-replicas: 0
+    bulk:
+      batch-size: 10
+      refresh-policy: IMMEDIATE
+
+logging:
+  level:
+    com.ontollogix: DEBUG
+    org.springframework.data.elasticsearch: WARN
