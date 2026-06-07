@@ -275,6 +275,10 @@ class DqViolationTriageServiceTest {
 //            assertThat(result.getSuccessCount()).isEqualTo(7);
             // esOps should have been called 3 times (batches of 3, 3, 1)
 //            verify(esOps, times(3))
+//
+//
+//
+//
 //                    .bulkIndex(anyList(), any(BulkOptions.class), any(IndexCoordinates.class));
         }
 
