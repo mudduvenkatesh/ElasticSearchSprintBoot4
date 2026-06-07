@@ -14,6 +14,9 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import com.example.search.ElasticsearchContainerBase;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import tools.jackson.databind.ObjectMapper;
@@ -50,7 +53,15 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class DqViolationTriageRealPayloadIT {
+class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
+
+    @DynamicPropertySource
+    static void elasticsearchProperties(DynamicPropertyRegistry registry) {
+        registry.add("elastic.cloud.local-uri",
+            () -> ES_CONTAINER.getHost() + ":" + ES_CONTAINER.getMappedPort(9200));
+        registry.add("elastic.cloud.cloud-id", () -> "");
+        registry.add("elastic.cloud.api-key",  () -> "");
+    }
 
     // -----------------------------------------------------------------------
     // Constants — match the JSON fixture exactly

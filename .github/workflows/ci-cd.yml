@@ -1,0 +1,114 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [develop]
+
+jobs:
+  # ── Job 1: Unit Tests ──────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Run unit tests
+        run: mvn test --batch-mode --no-transfer-progress
+
+      - name: Upload unit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: target/surefire-reports/
+          retention-days: 7
+
+  # ── Job 2: Integration Tests ───────────────────────────────────────────────
+  integration-tests:
+    name: Integration Tests
+    needs: unit-tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Run integration tests (Testcontainers spins up Elasticsearch)
+        run: mvn verify -Dsurefire.skip=true --batch-mode --no-transfer-progress
+
+      - name: Upload integration test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-report
+          path: target/failsafe-reports/
+          retention-days: 7
+
+  # ── Job 3: Merge → master, Package, Tag ───────────────────────────────────
+  release:
+    name: Merge, Package & Tag
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: temurin
+          cache: maven
+
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Merge develop into master
+        run: |
+          git fetch origin
+          git checkout master
+          git merge --no-ff origin/develop -m "ci: merge develop into master [skip ci]"
+          git push origin master
+
+      - name: Build release package
+        run: mvn clean package -DskipTests --batch-mode --no-transfer-progress
+
+      - name: Read project version
+        id: version
+        run: |
+          VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create and push release tag
+        run: |
+          TAG="v${{ steps.version.outputs.version }}-${{ github.run_number }}"
+          git tag -a "$TAG" -m "Release $TAG from develop @ ${{ github.sha }}"
+          git push origin "$TAG"
+
+      - name: Upload release JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: elasticsearch-springboot-${{ steps.version.outputs.version }}-${{ github.run_number }}
+          path: target/elasticsearch-springboot-*.jar
+          retention-days: 30
