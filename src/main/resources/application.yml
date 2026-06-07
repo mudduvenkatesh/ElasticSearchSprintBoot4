@@ -48,7 +48,7 @@ elastic:
 spring:
   elasticsearch:
     uris: ${ELASTIC_ENDPOINT:https://ontollogix-es-dev-218bf3.es.us-central1.gcp.cloud.es.io}
-    api-key: ${elastic.cloud.api-key. }
+    api-key: ${elastic.cloud.api-key}
 
   # Pretty JSON responses in development (remove in production)
   jackson:

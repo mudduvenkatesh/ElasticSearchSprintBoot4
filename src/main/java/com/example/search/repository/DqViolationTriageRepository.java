@@ -43,7 +43,7 @@ public interface DqViolationTriageRepository
             LocalDateTime from, LocalDateTime to, Pageable pageable);
 
     /** Find documents whose total violated rule count exceeds a threshold. */
-    List<DqViolationTriageDocument> findByTotalViolatedRulesGreaterThan(int threshold);
+    //ist<DqViolationTriageDocument> findByTotalViolatedRulesGreaterThan(int threshold);
 
     /** Find documents with a specific workflow ID. */
     List<DqViolationTriageDocument> findByWorkflowId(String workflowId);

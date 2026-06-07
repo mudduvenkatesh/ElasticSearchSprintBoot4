@@ -1,13 +1,21 @@
+elastic:
+  cloud:
+    cloud-id: ""          # not used in local mode; ElasticsearchConfig detects this
+    api-key: ""
+    username: elastic
+    password: changeme123
+
+
 spring:
   elasticsearch:
     uris: http://localhost:9200
-    username:
-    password:
-    cloud-id:
+    username: elastic
+    password: changeme123
 
 app:
   elasticsearch:
     index-name: dq-violation-triage-test
+
     number-of-shards: 1
     number-of-replicas: 0
     bulk:
@@ -15,6 +23,13 @@ app:
       refresh-policy: IMMEDIATE
 
 logging:
+
   level:
+    co.elastic.clients.transport: TRACE
+    co.elastic.clients.transport.http: TRACE
+    co.elastic.clients.json: TRACE
+    org.springframework.data.elasticsearch: DEBUG
     com.ontollogix: DEBUG
-    org.springframework.data.elasticsearch: WARN
+    co.elastic.clients: DEBUG
+    org.springframework.data.elasticsearch.client.WIRE: TRACE
+

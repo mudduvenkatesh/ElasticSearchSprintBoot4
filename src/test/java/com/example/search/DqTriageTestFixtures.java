@@ -110,7 +110,7 @@ public final class DqTriageTestFixtures {
                 .offendingRuleLabel(RULE_LABEL_JURISDICTION)
                 .offendingRuleLabelKeyword(RULE_LABEL_JURISDICTION)
                 .offendingRecords(List.of(offendingFund1Jurisdiction(), offendingFund2Jurisdiction()))
-                .offendingRecordCount(2)
+                //.offendingRecordCount(2)
                 .build();
     }
 
@@ -122,7 +122,7 @@ public final class DqTriageTestFixtures {
                 .offendingRuleLabel(RULE_LABEL_STATUS)
                 .offendingRuleLabelKeyword(RULE_LABEL_STATUS)
                 .offendingRecords(List.of(offendingFund1Status()))
-                .offendingRecordCount(1)
+                //.offendingRecordCount(1)
                 .build();
     }
 

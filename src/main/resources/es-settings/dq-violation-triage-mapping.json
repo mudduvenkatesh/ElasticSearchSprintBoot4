@@ -11,8 +11,6 @@
     "dataSteward":          { "type": "keyword" },
     "dataCustodian":        { "type": "keyword" },
     "dataOwner":            { "type": "keyword" },
-    "totalViolatedRules":   { "type": "integer" },
-    "totalOffendingRecords":{ "type": "integer" },
     "indexedAt":            { "type": "date",    "format": "strict_date_hour_minute_second" },
 
     "violatedRules": {
@@ -22,7 +20,7 @@
         "offendingRuleSubject":     { "type": "keyword" },
         "offendingRuleLabel":       { "type": "text",    "analyzer": "standard" },
         "offendingRuleLabelKeyword":{ "type": "keyword" },
-        "offendingRecordCount":     { "type": "integer" },
+
 
         "offendingRecords": {
           "type": "nested",

@@ -132,19 +132,6 @@ public class DqViolationTriageDocument {
     // Derived / computed fields (populated by the service layer before indexing)
     // -----------------------------------------------------------------------
 
-    /**
-     * Total number of distinct violated rules in this document.
-     * Stored for fast aggregation without counting the nested array.
-     */
-    @Field(name = "totalViolatedRules", type = FieldType.Integer)
-    private int totalViolatedRules;
-
-    /**
-     * Total number of offending records across all violated rules.
-     */
-    @Field(name = "totalOffendingRecords", type = FieldType.Integer)
-    private int totalOffendingRecords;
-
     // -----------------------------------------------------------------------
     // Audit
     // -----------------------------------------------------------------------

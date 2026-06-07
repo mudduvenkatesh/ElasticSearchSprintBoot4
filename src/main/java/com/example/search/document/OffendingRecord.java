@@ -29,7 +29,7 @@ public class OffendingRecord {
 
     /**
      * IRI of the DQ rule that this record violated.
-     * Matches the parent {@link ViolatedRule#offendingRuleSubject}.
+     *
      */
     @Field(name = "dqRuleSubject", type = FieldType.Keyword)
     private String dqRuleSubject;

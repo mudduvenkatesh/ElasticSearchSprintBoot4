@@ -65,6 +65,6 @@ public class ViolatedRule {
      * May differ from {@code offendingRecords.size()} if the list was paginated
      * before indexing; treat as a summary metric.
      */
-    @Field(name = "offendingRecordCount", type = FieldType.Integer)
-    private int offendingRecordCount;
+//
+
 }

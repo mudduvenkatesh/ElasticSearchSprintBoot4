@@ -59,8 +59,11 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     public ClientConfiguration clientConfiguration() {
         if (!props.hasCloudId()) {
             log.warn("ELASTIC_CLOUD_ID not set — connecting to localhost:9200 (local dev mode)");
+            log.info("Elastic Cloud auth: basic (user={})", props.username());
             return ClientConfiguration.builder()
+
                     .connectedTo("localhost:9200")
+                    .withBasicAuth(props.username(), props.password())
                     .build();
         }
 

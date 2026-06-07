@@ -1,7 +1,8 @@
 package com.example.search.controller;
 
 
-import com.example.search.document.BulkIndexResult;
+
+
 import com.example.search.document.DqViolationTriageDocument;
 import com.example.search.service.DqViolationTriageService;
 import jakarta.validation.Valid;
@@ -113,14 +114,14 @@ public class DqViolationTriageController {
      * HTTP 207 (Multi-Status) is returned regardless of partial failures;
      * callers should inspect the response body.
      */
-    @PostMapping("/bulk")
-    @ResponseStatus(HttpStatus.MULTI_STATUS)
-    public BulkIndexResult bulkIndex(
-            @RequestBody List<@Valid DqViolationTriageDocument> documents) {
-
-        log.info("POST /dq-triage/bulk – {} documents", documents.size());
-        return service.bulkIndex(documents);
-    }
+//    @PostMapping("/bulk")
+//    @ResponseStatus(HttpStatus.MULTI_STATUS)
+//    public BulkIndexResult bulkIndex(
+//            @RequestBody List<@Valid DqViolationTriageDocument> documents) {
+//
+//        log.info("POST /dq-triage/bulk – {} documents", documents.size());
+//        return service.bulkIndex(documents);
+//    }
 
     // ------------------------------------------------------------------
     // Search endpoints

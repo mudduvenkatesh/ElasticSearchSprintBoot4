@@ -18,7 +18,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
-import com.example.search.document.BulkIndexResult;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -116,91 +115,92 @@ public class DqViolationTriageService {
      * {@code app.elasticsearch.bulk.batch-size}.
      *
      * <p>Each document is enriched (derived fields) before indexing.
-     * Failed items are collected and returned in the {@link BulkIndexResult}
+     * Failed items are collected and returned in the {@link }
      * without aborting the entire batch.
      *
-     * @param documents list of documents to index (must not be null)
      * @return aggregated result with success/failure counts
      */
-    public BulkIndexResult bulkIndex(List<DqViolationTriageDocument> documents) {
-        Assert.notNull(documents, "Document list must not be null");
-
-        if (documents.isEmpty()) {
-            log.warn("bulkIndex called with empty list – nothing to do");
-            return BulkIndexResult.builder()
-                    .totalRequested(0)
-                    .successCount(0)
-                    .failures(Collections.emptyList())
-                    .build();
-        }
-
-        int batchSize = esProps.getBulk().getBatchSize();
-        int total = documents.size();
-        int successCount = 0;
-        List<BulkIndexResult.FailedDocument> failures = new ArrayList<>();
-
-        log.info("Starting bulk index of {} documents (batch size={})", total, batchSize);
-
-        // Partition into batches
-        for (int offset = 0; offset < total; offset += batchSize) {
-            int end = Math.min(offset + batchSize, total);
-            List<DqViolationTriageDocument> batch = documents.subList(offset, end);
-
-            log.debug("Processing batch [{}-{}] of {}", offset, end - 1, total);
-
-            try {
-                List<IndexQuery> queries = batch.stream()
-                        .peek(this::enrichDocument)
-                        .map(doc -> new IndexQueryBuilder()
-                                .withId(doc.getUniqueTriageId())
-                                .withObject(doc)
-                                .build())
-                        .collect(Collectors.toList());
-
-                BulkOptions bulkOptions = BulkOptions.builder()
-                        .withRefreshPolicy(resolveBulkRefreshPolicy())
-                        .build();
-
-                List<IndexedObjectInformation> results =
-                        esOps.bulkIndex(queries, bulkOptions,
-                                IndexCoordinates.of(esProps.getIndexName()));
-
-                // Tally successes (failed items returned with null id or error)
-                for (IndexedObjectInformation info : results) {
-                    if (info.id() != null) {
-                        successCount++;
-                    } else {
-                        failures.add(BulkIndexResult.FailedDocument.builder()
-                                .documentId("unknown")
-                                .errorReason("Null id returned from bulk response")
-                                .build());
-                    }
-                }
-
-                log.debug("Batch [{}-{}] indexed: {} ok", offset, end - 1, results.size());
-
-            } catch (Exception ex) {
-                log.error("Batch [{}-{}] failed: {}", offset, end - 1, ex.getMessage(), ex);
-                // Mark every document in this batch as failed
-                batch.forEach(doc -> failures.add(
-                        BulkIndexResult.FailedDocument.builder()
-                                .documentId(doc.getUniqueTriageId())
-                                .errorReason(ex.getMessage())
-                                .build()));
-            }
-        }
-
-        BulkIndexResult result = BulkIndexResult.builder()
-                .totalRequested(total)
-                .successCount(successCount)
-                .failures(failures)
-                .build();
-
-        log.info("Bulk index complete: {}/{} succeeded, {} failed",
-                successCount, total, failures.size());
-
-        return result;
-    }
+//    public BulkIndexResult bulkIndex(List<DqViolationTriageDocument> documents) {
+//        Assert.notNull(documents, "Document list must not be null");
+//
+//        if (documents.isEmpty()) {
+//            log.warn("bulkIndex called with empty list – nothing to do");
+//            return BulkIndexResult.builder()
+//                    .totalRequested(0)
+//                    .successCount(0)
+//                    .failures(Collections.emptyList())
+//                    .build();
+//        }
+//
+//        int batchSize = esProps.getBulk().getBatchSize();
+//        int total = documents.size();
+//        int successCount = 0;
+//        List<BulkIndexResult.FailedDocument> failures = new ArrayList<>();
+//
+//        log.info("Starting bulk index of {} documents (batch size={})", total, batchSize);
+//
+//        // Partition into batches
+//        for (int offset = 0; offset < total; offset += batchSize) {
+//            int end = Math.min(offset + batchSize, total);
+//            List<DqViolationTriageDocument> batch = documents.subList(offset, end);
+//
+//            log.debug("Processing batch [{}-{}] of {}", offset, end - 1, total);
+//
+//            try {
+//                List<IndexQuery> queries = batch.stream()
+//                        .peek(this::enrichDocument)
+//                        .map(doc -> new IndexQueryBuilder()
+//                                .withId(doc.getUniqueTriageId())
+//                                .withObject(doc)
+//                                .build())
+//                        .collect(Collectors.toList());
+//
+//                BulkOptions bulkOptions = BulkOptions.builder()
+//                        .withRefreshPolicy(resolveBulkRefreshPolicy())
+//                        .build();
+//
+//                List<IndexedObjectInformation> results =
+//                        esOps.bulkIndex(queries, bulkOptions,
+//                                IndexCoordinates.of(esProps.getIndexName()));
+//
+//                // Tally successes (failed items returned with null id or error)
+//                for (IndexedObjectInformation info : results) {
+//                    if (info.id() != null) {
+//                        successCount++;
+//                    } else {
+//                        failures.add(BulkIndexResult.FailedDocument.builder()
+//                                .documentId("unknown")
+//                                .errorReason("Null id returned from bulk response")
+//                                .build());
+//                    }
+//                }
+//
+//                log.debug("Batch [{}-{}] indexed: {} ok", offset, end - 1, results.size());
+//
+//            } catch (Exception ex) {
+//
+//
+//                log.error("Batch [{}-{}] failed: {}", offset, end - 1, ex.getMessage(), ex);
+//                // Mark every document in this batch as failed
+//                batch.forEach(doc -> failures.add(
+//                        BulkIndexResult.FailedDocument.builder()
+//                                .documentId(doc.getUniqueTriageId())
+//                                .errorReason(ex.getMessage())
+//                                .build()));
+//            }
+//        }
+//
+//        BulkIndexResult result = BulkIndexResult.builder()
+//                .totalRequested(total)
+//                .successCount(successCount)
+//                .failures(failures)
+//                .build();
+//
+//        log.info("Bulk index complete: {}/{} succeeded, {} failed",
+//                successCount, total, failures.size());
+//
+//        return result;
+//    }
 
     // ------------------------------------------------------------------
     // Search / query methods
@@ -275,8 +275,8 @@ public class DqViolationTriageService {
 
         List<ViolatedRule> rules = doc.getViolatedRules();
         if (CollectionUtils.isEmpty(rules)) {
-            doc.setTotalViolatedRules(0);
-            doc.setTotalOffendingRecords(0);
+            //doc.setTotalViolatedRules(0);
+            //doc.setTotalOffendingRecords(0);
             return;
         }
 
@@ -288,14 +288,14 @@ public class DqViolationTriageService {
             // Compute offendingRecordCount if not already set
             int ruleCount = CollectionUtils.isEmpty(rule.getOffendingRecords())
                     ? 0 : rule.getOffendingRecords().size();
-            if (rule.getOffendingRecordCount() == 0) {
-                rule.setOffendingRecordCount(ruleCount);
-            }
-            totalRecords += rule.getOffendingRecordCount();
+//            if (rule.getOffendingRecordCount() == 0) {
+//                rule.setOffendingRecordCount(ruleCount);
+//            }
+            //totalRecords += rule.getOffendingRecordCount();
         }
 
-        doc.setTotalViolatedRules(rules.size());
-        doc.setTotalOffendingRecords(totalRecords);
+        //doc.setTotalViolatedRules(rules.size());
+        //doc.setTotalOffendingRecords(totalRecords);
     }
 
     /**
