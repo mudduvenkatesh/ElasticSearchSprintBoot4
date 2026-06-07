@@ -278,7 +278,6 @@ REST Assured ships with its own Jackson dependency which can conflict with Sprin
                     <excludes>
                         <!-- Handled by failsafe; require a running ES via Testcontainers -->
                         <exclude>**/*IT.java</exclude>
-                        <exclude>**/ElasticsearchConnectionTest.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>

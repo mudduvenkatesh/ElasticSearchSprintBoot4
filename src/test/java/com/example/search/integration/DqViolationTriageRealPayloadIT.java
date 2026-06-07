@@ -14,6 +14,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.test.context.ActiveProfiles;
+import com.example.search.ElasticsearchContainerBase;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import tools.jackson.databind.ObjectMapper;
@@ -50,7 +51,7 @@ import static org.hamcrest.Matchers.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class DqViolationTriageRealPayloadIT {
+class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     // -----------------------------------------------------------------------
     // Constants — match the JSON fixture exactly
