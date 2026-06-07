@@ -8,7 +8,7 @@ import java.time.Duration;
 /**
  * Singleton Testcontainers base for integration tests that need Elasticsearch.
  *
- * Uses GenericContainer with ES 9.0.0 (matching the ES Java client 9.x) so
+ * Uses GenericContainer with ES 9.4.2 (matching the ES Java client 9.x) so
  * that Testcontainers' ElasticsearchContainer SSL wrapper (designed for 8.x)
  * is bypassed entirely.  Container starts once per JVM; all subclasses share
  * it via Spring context caching.
@@ -19,7 +19,7 @@ import java.time.Duration;
 public abstract class ElasticsearchContainerBase {
 
     protected static final GenericContainer<?> ES_CONTAINER =
-        new GenericContainer<>("docker.elastic.co/elasticsearch/elasticsearch:9.0.0")
+        new GenericContainer<>("docker.elastic.co/elasticsearch/elasticsearch:9.4.2")
             .withEnv("discovery.type", "single-node")
             .withEnv("xpack.security.enabled", "false")
             .withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m")
