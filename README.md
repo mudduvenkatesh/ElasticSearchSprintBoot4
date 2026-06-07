@@ -65,11 +65,27 @@ java -jar target/elasticsearch-springboot-1.0.0.jar
 ## Running Tests
 
 ```bash
-./mvnw clean test          # unit tests
-./mvnw clean verify        # unit + integration tests (uses Testcontainers)
+./mvnw test                          # unit tests only
+./mvnw verify                        # unit tests + integration tests
+./mvnw verify -Dsurefire.skip=true   # integration tests only (skips unit tests)
+
+# Run a single integration test class
+./mvnw verify -Dsurefire.skip=true -Dit.test=DqViolationTriageRealPayloadIT
 ```
 
-Integration tests spin up an embedded Elasticsearch container automatically — no external cluster needed.
+Docker must be running for integration tests — Testcontainers pulls and starts `elasticsearch:8.15.0` automatically.
+
+### Test execution map
+
+| Test class | Runs via | Needs Docker |
+|------------|----------|:------------:|
+| `DomainModelTest` | surefire (`mvn test`) | No |
+| `ElasticsearchConfigTest` | surefire (`mvn test`) | No |
+| `DqViolationTriageControllerTest` | surefire (`mvn test`) | No |
+| `DqViolationTriageServiceTest` | surefire (`mvn test`) | No |
+| `DqViolationTriageRepositoryTest` | surefire (`mvn test`) | No |
+| `ElasticsearchConnectionIT` | failsafe (`mvn verify`) | Yes |
+| `DqViolationTriageRealPayloadIT` | failsafe (`mvn verify`) | Yes |
 
 ## API Reference
 

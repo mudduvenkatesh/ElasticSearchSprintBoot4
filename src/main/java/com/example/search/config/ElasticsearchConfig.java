@@ -58,13 +58,13 @@ public class ElasticsearchConfig extends ElasticsearchConfiguration {
     @Override
     public ClientConfiguration clientConfiguration() {
         if (!props.hasCloudId()) {
-            log.warn("ELASTIC_CLOUD_ID not set — connecting to localhost:9200 (local dev mode)");
-            log.info("Elastic Cloud auth: basic (user={})", props.username());
-            return ClientConfiguration.builder()
-
-                    .connectedTo("localhost:9200")
-                    .withBasicAuth(props.username(), props.password())
-                    .build();
+            log.warn("ELASTIC_CLOUD_ID not set — connecting to {} (local dev mode)", props.localUri());
+            var builder = ClientConfiguration.builder().connectedTo(props.localUri());
+            if (!props.password().isBlank()) {
+                log.info("Local auth: basic (user={})", props.username());
+                builder.withBasicAuth(props.username(), props.password());
+            }
+            return builder.build();
         }
 
         // Decode Cloud ID to "host:port" string expected by ClientConfiguration
