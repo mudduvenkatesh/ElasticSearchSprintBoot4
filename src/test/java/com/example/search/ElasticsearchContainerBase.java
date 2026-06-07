@@ -1,37 +1,37 @@
 package com.example.search;
 
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.elasticsearch.ElasticsearchContainer;
-import org.testcontainers.utility.DockerImageName;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.wait.strategy.Wait;
+
+import java.time.Duration;
 
 /**
  * Singleton Testcontainers base for integration tests that need Elasticsearch.
  *
- * Extend this class instead of hard-coding localhost:9200.  The container
- * starts once per JVM and is shared across all subclasses via Spring context
- * caching — Docker startup cost is paid only once per test run.
+ * Uses GenericContainer with ES 9.0.0 (matching the ES Java client 9.x) so
+ * that Testcontainers' ElasticsearchContainer SSL wrapper (designed for 8.x)
+ * is bypassed entirely.  Container starts once per JVM; all subclasses share
+ * it via Spring context caching.
+ *
+ * Each subclass must declare its own @DynamicPropertySource — Spring Framework
+ * 7 does not inherit the annotation from superclasses.
  */
 public abstract class ElasticsearchContainerBase {
 
-    private static final ElasticsearchContainer ES_CONTAINER =
-        new ElasticsearchContainer(
-            DockerImageName
-                .parse("docker.elastic.co/elasticsearch/elasticsearch:8.15.0")
-                .asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch")
-        )
-        .withEnv("discovery.type", "single-node")
-        .withEnv("xpack.security.enabled", "false");
+    protected static final GenericContainer<?> ES_CONTAINER =
+        new GenericContainer<>("docker.elastic.co/elasticsearch/elasticsearch:9.0.0")
+            .withEnv("discovery.type", "single-node")
+            .withEnv("xpack.security.enabled", "false")
+            .withEnv("ES_JAVA_OPTS", "-Xms512m -Xmx512m")
+            .withExposedPorts(9200)
+            .waitingFor(
+                Wait.forHttp("/_cluster/health")
+                    .forPort(9200)
+                    .forStatusCode(200)
+                    .withReadTimeout(Duration.ofSeconds(90))
+            );
 
     static {
         ES_CONTAINER.start();
-    }
-
-    @DynamicPropertySource
-    static void elasticsearchProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.elasticsearch.uris",
-            () -> "http://" + ES_CONTAINER.getHttpHostAddress());
-        registry.add("elastic.cloud.cloud-id", () -> "");
-        registry.add("elastic.cloud.api-key",  () -> "");
     }
 }

@@ -16,13 +16,13 @@ public record ElasticCloudProperties(
     String password,
     int connectionTimeoutSeconds,
     int socketTimeoutSeconds,
-    String indexName
-
-
+    String indexName,
+    String localUri
 ) {
     public ElasticCloudProperties {
         username = (username == null) ? "elastic" : username;
         password = (password == null) ? "" : password;
+        localUri  = (localUri  == null || localUri.isBlank()) ? "localhost:9200" : localUri;
         if (connectionTimeoutSeconds <= 0) connectionTimeoutSeconds = 10;
         if (socketTimeoutSeconds <= 0) socketTimeoutSeconds = 60;
     }
