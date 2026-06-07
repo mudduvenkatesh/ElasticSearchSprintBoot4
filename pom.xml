@@ -14,7 +14,7 @@
 
     <groupId>com.example</groupId>
     <artifactId>elasticsearch-springboot</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>jar</packaging>
     <name>elasticsearch-springboot</name>
     <description>Spring Boot 4.0.6 + Elasticsearch Java Client 9.x + Elastic Cloud (SaaS)</description>
