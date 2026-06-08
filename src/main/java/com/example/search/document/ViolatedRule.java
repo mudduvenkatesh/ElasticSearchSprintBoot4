@@ -61,10 +61,9 @@ public class ViolatedRule {
     private List<OffendingRecord> offendingRecords = new ArrayList<>();
 
     /**
-     * Pre-computed count of offending records.
-     * May differ from {@code offendingRecords.size()} if the list was paginated
-     * before indexing; treat as a summary metric.
+     * Pre-computed count of offending records for this rule.
+     * Denormalized for efficient range queries without scripting.
      */
-//
-
+    @Field(name = "offendingRecordCount", type = FieldType.Integer)
+    private Integer offendingRecordCount;
 }

@@ -78,13 +78,8 @@ public interface DqViolationTriageRepository
      */
     @Query("""
             {
-              "nested": {
-                "path": "violatedRules",
-                "query": {
-                  "term": {
-                    "violatedRules.offendingRuleLabelKeyword": "?0"
-                  }
-                }
+              "term": {
+                "violatedRules.offendingRuleLabelKeyword": "?0"
               }
             }
             """)
@@ -102,15 +97,10 @@ public interface DqViolationTriageRepository
     @Query("""
             {
               "nested": {
-                "path": "violatedRules",
+                "path": "violatedRules.offendingRecords",
                 "query": {
-                  "nested": {
-                    "path": "violatedRules.offendingRecords",
-                    "query": {
-                      "term": {
-                        "violatedRules.offendingRecords.dataRecordSubject": "?0"
-                      }
-                    }
+                  "term": {
+                    "violatedRules.offendingRecords.dataRecordSubject": "?0"
                   }
                 }
               }
@@ -127,15 +117,10 @@ public interface DqViolationTriageRepository
     @Query("""
             {
               "nested": {
-                "path": "violatedRules",
+                "path": "violatedRules.offendingRecords",
                 "query": {
-                  "nested": {
-                    "path": "violatedRules.offendingRecords",
-                    "query": {
-                      "term": {
-                        "violatedRules.offendingRecords.dqErrorPropertyValue.predicateIRI": "?0"
-                      }
-                    }
+                  "term": {
+                    "violatedRules.offendingRecords.dqErrorPropertyValue.predicateIRI": "?0"
                   }
                 }
               }
@@ -158,7 +143,7 @@ public interface DqViolationTriageRepository
                 "must": [
                   {
                     "range": {
-                      "totalOffendingRecords": { "gte": ?0 }
+                      "violatedRules.offendingRecordCount": { "gte": ?0 }
                     }
                   },
                   {
