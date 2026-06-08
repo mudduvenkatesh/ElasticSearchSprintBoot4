@@ -1,0 +1,119 @@
+{
+  "content" : [ {
+    "uniqueTriageId" : "ixleY7JTGoLsJWfe82a2e5",
+    "trackingId" : "dqviolation-opiuyht56",
+    "scoreCardSubject" : "http://metadata.pmog.mymac.net/dqscorecard#fivfibedax3p0enbeosffg",
+    "extractDateTime" : "2026-05-25T14:30:00",
+    "businessReason" : "Violations for The score card for Steward reporting",
+    "workflowId" : null,
+    "workflowStartTime" : null,
+    "workflowEndTime" : null,
+    "dataSteward" : "vmuddu@myamc.com",
+    "dataCustodian" : "vmuddu@myamc.com",
+    "dataOwner" : "vmuddu@myamc.com",
+    "violatedRules" : [ {
+      "ruleExecutionSubject" : "http://metadata.pmog.mymac.net/dqruleexecution#q99utilq3wun0rewlzhw6h",
+      "offendingRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#u8ytnp6ajlto6tdgdvgvyi",
+      "offendingRuleLabel" : "ValueRequiredConstraintRule-Fund Jurisdiction",
+      "offendingRuleLabelKeyword" : "ValueRequiredConstraintRule-Fund Jurisdiction",
+      "offendingRecords" : [ {
+        "dataRecordSubject" : "http://data.pmog.mymac.net/fund#qnhf35k7ttqshoh4uj5quv",
+        "dqRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#u8ytnp6ajlto6tdgdvgvyi",
+        "dataRecordId" : null,
+        "dqErrorPropertyValue" : {
+          "predicateIRI" : "http://spec.pmog.mymac.net/dataproperty#fundJurisdictionDataProperty",
+          "stringValue" : null,
+          "obfuscated" : false,
+          "errorDescription" : "Required value Missing/empty for ValueRequiredConstraintRule-Fund Jurisdiction"
+        }
+      }, {
+        "dataRecordSubject" : "http://data.pmog.mymac.net/fund#1occhlykvpwpxjmyvnysoc",
+        "dqRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#u8ytnp6ajlto6tdgdvgvyi",
+        "dataRecordId" : null,
+        "dqErrorPropertyValue" : {
+          "predicateIRI" : "http://spec.pmog.mymac.net/dataproperty#fundJurisdictionDataProperty",
+          "stringValue" : null,
+          "obfuscated" : false,
+          "errorDescription" : "Required value Missing/empty for ValueRequiredConstraintRule-Fund Jurisdiction"
+        }
+      } ],
+      "offendingRecordCount" : 2
+    }, {
+      "ruleExecutionSubject" : "http://metadata.pmog.mymac.net/dqruleexecution#lumavsipopxlvc1lx6gtuq",
+      "offendingRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#vveam65jb8vrbs63poighc",
+      "offendingRuleLabel" : "ValueRequiredConstraintRule-Fund is part of Product",
+      "offendingRuleLabelKeyword" : "ValueRequiredConstraintRule-Fund is part of Product",
+      "offendingRecords" : [ {
+        "dataRecordSubject" : "http://data.pmog.mymac.net/fund#qnhf35k7ttqshoh4uj5quv",
+        "dqRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#vveam65jb8vrbs63poighc",
+        "dataRecordId" : null,
+        "dqErrorPropertyValue" : {
+          "predicateIRI" : "http://spec.pmog.mymac.net/dataproperty#belongsToProductDataProperty",
+          "stringValue" : null,
+          "obfuscated" : false,
+          "errorDescription" : "Required value Missing/empty for ValueRequiredConstraintRule-Fund is part of Product"
+        }
+      } ],
+      "offendingRecordCount" : 1
+    }, {
+      "ruleExecutionSubject" : "http://metadata.pmog.mymac.net/dqruleexecution#vanxbbnucw03yolkx5lxci",
+      "offendingRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#1iwyred2qmkg8jgkwgelji",
+      "offendingRuleLabel" : "ValueRequiredConstraintRule-Fund Status",
+      "offendingRuleLabelKeyword" : "ValueRequiredConstraintRule-Fund Status",
+      "offendingRecords" : [ {
+        "dataRecordSubject" : "http://data.pmog.mymac.net/fund#qnhf35k7ttqshoh4uj5quv",
+        "dqRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#1iwyred2qmkg8jgkwgelji",
+        "dataRecordId" : null,
+        "dqErrorPropertyValue" : {
+          "predicateIRI" : "http://spec.pmog.mymac.net/dataproperty#fundStatusDataProperty",
+          "stringValue" : null,
+          "obfuscated" : false,
+          "errorDescription" : "Required value Missing/empty for ValueRequiredConstraintRule-Fund Status"
+        }
+      } ],
+      "offendingRecordCount" : 1
+    }, {
+      "ruleExecutionSubject" : "http://metadata.pmog.mymac.net/dqruleexecution#yfhlll2zeqacbd4n4ptcdt",
+      "offendingRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#ctxgprko49k8qbzbdlpbqy",
+      "offendingRuleLabel" : "ValueRequiredConstraintRule-Nav FrequencyDataProperty",
+      "offendingRuleLabelKeyword" : "ValueRequiredConstraintRule-Nav FrequencyDataProperty",
+      "offendingRecords" : [ {
+        "dataRecordSubject" : "http://data.pmog.mymac.net/fund#qnhf35k7ttqshoh4uj5quv",
+        "dqRuleSubject" : "http://metadata.pmog.mymac.net/dqruleset#ctxgprko49k8qbzbdlpbqy",
+        "dataRecordId" : null,
+        "dqErrorPropertyValue" : {
+          "predicateIRI" : "http://spec.pmog.mymac.net/dataproperty#navFrequencyDataProperty",
+          "stringValue" : null,
+          "obfuscated" : false,
+          "errorDescription" : "Required value Missing/empty for ValueRequiredConstraintRule-Nav FrequencyDataProperty"
+        }
+      } ],
+      "offendingRecordCount" : 1
+    } ]
+  } ],
+  "empty" : false,
+  "first" : true,
+  "last" : true,
+  "number" : 0,
+  "numberOfElements" : 1,
+  "pageable" : {
+    "offset" : 0,
+    "pageNumber" : 0,
+    "pageSize" : 10,
+    "paged" : true,
+    "sort" : {
+      "empty" : false,
+      "sorted" : true,
+      "unsorted" : false
+    },
+    "unpaged" : false
+  },
+  "size" : 10,
+  "sort" : {
+    "empty" : false,
+    "sorted" : true,
+    "unsorted" : false
+  },
+  "totalElements" : 1,
+  "totalPages" : 1
+}

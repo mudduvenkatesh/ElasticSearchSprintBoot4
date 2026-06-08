@@ -2,9 +2,15 @@ package com.example.search.integration;
 
 import com.example.search.ElasticsearchContainerBase;
 import com.example.search.document.DqViolationTriageDocument;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.*;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
@@ -19,6 +25,10 @@ import org.springframework.test.context.DynamicPropertySource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Set;
 
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,6 +93,15 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
     private static final String FIXTURE = "fixtures/dq-triage-real-payload.json";
 
     // -------------------------------------------------------------------------
+    // Golden-file infrastructure
+    // -------------------------------------------------------------------------
+
+    private static final ObjectMapper MAPPER =
+        new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    private static final Set<String> DYNAMIC_FIELDS = Set.of("indexedAt");
+    private static final String EXPECTED_DIR = "src/test/resources/expected";
+
+    // -------------------------------------------------------------------------
     // Infrastructure
     // -------------------------------------------------------------------------
 
@@ -110,14 +129,47 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
         catch (Exception ignored) {}
     }
 
+    // -------------------------------------------------------------------------
+    // Golden-file helper methods
+    // -------------------------------------------------------------------------
+
+    /**
+     * Capture-on-first-run golden file assertion.
+     * If the expected file does not exist it writes the actual JSON (minus
+     * dynamic fields like indexedAt) to it so the developer can review and
+     * commit it. On every subsequent run it asserts with JSONAssert LENIENT
+     * (actual may have extra fields; expected is the subset we care about).
+     */
+    private void assertMatchesExpected(String filename, String actualJson) throws Exception {
+        Path filePath = Paths.get(EXPECTED_DIR, filename);
+        if (!Files.exists(filePath)) {
+            JsonNode tree = MAPPER.readTree(actualJson);
+            removeDynamicFields(tree);
+            Files.createDirectories(filePath.getParent());
+            Files.writeString(filePath, MAPPER.writeValueAsString(tree));
+            return;  // first run: file written, no comparison yet
+        }
+        JSONAssert.assertEquals(Files.readString(filePath), actualJson, JSONCompareMode.LENIENT);
+    }
+
+    /** Recursively strips every field whose name is in DYNAMIC_FIELDS. */
+    private void removeDynamicFields(JsonNode node) {
+        if (node instanceof ObjectNode obj) {
+            DYNAMIC_FIELDS.forEach(obj::remove);
+            node.fields().forEachRemaining(e -> removeDynamicFields(e.getValue()));
+        } else if (node.isArray()) {
+            node.forEach(this::removeDynamicFields);
+        }
+    }
+
     // =========================================================================
     // 1. POST — index the real payload
     // =========================================================================
 
     @Test @Order(1)
     @DisplayName("POST /dq-triage → 201, response body matches fixture")
-    void shouldIndexRealPayload() {
-        given()
+    void shouldIndexRealPayload() throws Exception {
+        String actual = given()
             .contentType(ContentType.JSON)
             .body(rawJson)
         .when()
@@ -136,7 +188,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
             .body("workflowStartTime",     nullValue())
             .body("workflowEndTime",       nullValue())
             .body("violatedRules",         hasSize(4))
-            .body("indexedAt",             notNullValue());  // enriched by service
+            .body("indexedAt",             notNullValue())  // enriched by service
+            .extract().body().asString();
+
+        assertMatchesExpected("01-post-create.json", actual);
     }
 
     // =========================================================================
@@ -145,8 +200,8 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(2)
     @DisplayName("GET /dq-triage/{id} → 200, all fields match fixture")
-    void shouldGetDocumentById() {
-        given()
+    void shouldGetDocumentById() throws Exception {
+        String actual = given()
             .pathParam("id", UNIQUE_TRIAGE_ID)
         .when()
             .get("/dq-triage/{id}")
@@ -174,7 +229,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
             .body("violatedRules[0].offendingRecords[0].dqErrorPropertyValue.predicateIRI",
                     equalTo(PREDICATE_JURISDICTION))
             .body("violatedRules[0].offendingRecords[0].dqErrorPropertyValue.obfuscated",
-                    equalTo(false));
+                    equalTo(false))
+            .extract().body().asString();
+
+        assertMatchesExpected("02-get-by-id.json", actual);
     }
 
     // =========================================================================
@@ -183,8 +241,8 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(3)
     @DisplayName("GET /dq-triage/tracking/{trackingId} → 200, correct document")
-    void shouldGetByTrackingId() {
-        given()
+    void shouldGetByTrackingId() throws Exception {
+        String actual = given()
             .pathParam("trackingId", TRACKING_ID)
         .when()
             .get("/dq-triage/tracking/{trackingId}")
@@ -192,7 +250,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
             .statusCode(200)
             .body("uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
             .body("trackingId",     equalTo(TRACKING_ID))
-            .body("dataSteward",    equalTo(DATA_STEWARD));
+            .body("dataSteward",    equalTo(DATA_STEWARD))
+            .extract().body().asString();
+
+        assertMatchesExpected("03-get-by-tracking-id.json", actual);
     }
 
     // =========================================================================
@@ -261,8 +322,8 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(5)
     @DisplayName("GET /search/scorecard → 200, returns document with matching scorecard IRI")
-    void shouldSearchByScoreCardSubject() {
-        given()
+    void shouldSearchByScoreCardSubject() throws Exception {
+        String actual = given()
             .queryParam("scoreCardSubject", SCORECARD_SUBJECT)
         .when()
             .get("/dq-triage/search/scorecard")
@@ -270,7 +331,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
             .statusCode(200)
             .body("$",                  hasSize(greaterThanOrEqualTo(1)))
             .body("[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
-            .body("[0].scoreCardSubject", equalTo(SCORECARD_SUBJECT));
+            .body("[0].scoreCardSubject", equalTo(SCORECARD_SUBJECT))
+            .extract().body().asString();
+
+        assertMatchesExpected("05-search-scorecard.json", actual);
     }
 
     // =========================================================================
@@ -279,8 +343,8 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(6)
     @DisplayName("GET /search/steward → 200, paginated result contains document")
-    void shouldSearchByDataSteward() {
-        given()
+    void shouldSearchByDataSteward() throws Exception {
+        String actual = given()
             .queryParam("dataSteward", DATA_STEWARD)
             .queryParam("page", 0)
             .queryParam("size", 10)
@@ -292,7 +356,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
             .body("content[0].uniqueTriageId",   equalTo(UNIQUE_TRIAGE_ID))
             .body("content[0].dataSteward",      equalTo(DATA_STEWARD))
             .body("totalElements",               greaterThanOrEqualTo(1))
-            .body("size",                        equalTo(10));
+            .body("size",                        equalTo(10))
+            .extract().body().asString();
+
+        assertMatchesExpected("06-search-steward-page.json", actual);
     }
 
     // =========================================================================
@@ -301,8 +368,8 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(7)
     @DisplayName("GET /search?q=Steward → 200, document found via full-text")
-    void shouldSearchByBusinessReason() {
-        given()
+    void shouldSearchByBusinessReason() throws Exception {
+        String actual = given()
             .queryParam("q", "Steward")
             .queryParam("page", 0)
             .queryParam("size", 10)
@@ -312,7 +379,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
             .statusCode(200)
             .body("content",                   hasSize(greaterThanOrEqualTo(1)))
             .body("content[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
-            .body("content[0].businessReason", equalTo(BUSINESS_REASON));
+            .body("content[0].businessReason", equalTo(BUSINESS_REASON))
+            .extract().body().asString();
+
+        assertMatchesExpected("07-search-full-text-page.json", actual);
     }
 
     // =========================================================================
@@ -321,15 +391,18 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(8)
     @DisplayName("GET /search/rule-label?label=Fund Jurisdiction → 200, document found")
-    void shouldSearchByRuleLabel() {
-        given()
+    void shouldSearchByRuleLabel() throws Exception {
+        String actual = given()
             .queryParam("label", RULE_LABEL_1)
         .when()
             .get("/dq-triage/search/rule-label")
         .then()
             .statusCode(200)
             .body("$",                  hasSize(greaterThanOrEqualTo(1)))
-            .body("[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID));
+            .body("[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
+            .extract().body().asString();
+
+        assertMatchesExpected("08-search-rule-label.json", actual);
     }
 
     // =========================================================================
@@ -338,15 +411,18 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(9)
     @DisplayName("GET /search/offending-record?dataRecordIri=FUND_IRI_1 → 200, document found")
-    void shouldSearchByOffendingRecord() {
-        given()
+    void shouldSearchByOffendingRecord() throws Exception {
+        String actual = given()
             .queryParam("dataRecordIri", FUND_IRI_1)
         .when()
             .get("/dq-triage/search/offending-record")
         .then()
             .statusCode(200)
             .body("$",                  hasSize(greaterThanOrEqualTo(1)))
-            .body("[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID));
+            .body("[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
+            .extract().body().asString();
+
+        assertMatchesExpected("09-search-offending-record.json", actual);
     }
 
     // =========================================================================
@@ -355,15 +431,18 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(10)
     @DisplayName("GET /search/predicate?predicateIRI=fundJurisdiction → 200, document found")
-    void shouldSearchByPredicateIRI() {
-        given()
+    void shouldSearchByPredicateIRI() throws Exception {
+        String actual = given()
             .queryParam("predicateIRI", PREDICATE_JURISDICTION)
         .when()
             .get("/dq-triage/search/predicate")
         .then()
             .statusCode(200)
             .body("$",                  hasSize(greaterThanOrEqualTo(1)))
-            .body("[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID));
+            .body("[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
+            .extract().body().asString();
+
+        assertMatchesExpected("10-search-predicate.json", actual);
     }
 
     // =========================================================================
@@ -372,9 +451,9 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(11)
     @DisplayName("GET /search/date-range → 200, document within 2026-05 range found")
-    void shouldSearchByDateRange() {
+    void shouldSearchByDateRange() throws Exception {
         // extractDateTime in fixture: 2026-05-25T14:30:00
-        given()
+        String actual = given()
             .queryParam("from", "2026-05-01T00:00:00")
             .queryParam("to",   "2026-06-01T00:00:00")
             .queryParam("page", 0)
@@ -385,7 +464,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
             .statusCode(200)
             .body("content",                   hasSize(greaterThanOrEqualTo(1)))
             .body("content[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
-            .body("content[0].extractDateTime", notNullValue());
+            .body("content[0].extractDateTime", notNullValue())
+            .extract().body().asString();
+
+        assertMatchesExpected("11-search-date-range-page.json", actual);
     }
 
     // =========================================================================
@@ -394,8 +476,8 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(12)
     @DisplayName("GET /search/high-severity?minRecords=2 → 200, document found")
-    void shouldFindHighSeverityViolations() {
-        given()
+    void shouldFindHighSeverityViolations() throws Exception {
+        String actual = given()
             .queryParam("minRecords", 2)
             .queryParam("from",  "2026-05-01T00:00:00")
             .queryParam("to",    "2026-06-01T00:00:00")
@@ -406,7 +488,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
         .then()
             .statusCode(200)
             .body("content",                   hasSize(greaterThanOrEqualTo(1)))
-            .body("content[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID));
+            .body("content[0].uniqueTriageId", equalTo(UNIQUE_TRIAGE_ID))
+            .extract().body().asString();
+
+        assertMatchesExpected("12-search-high-severity-page.json", actual);
     }
 
     // =========================================================================
@@ -415,14 +500,17 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(13)
     @DisplayName("POST same payload again → 200/201, count still 1")
-    void shouldUpsertIdempotently() {
-        given()
+    void shouldUpsertIdempotently() throws Exception {
+        String actual = given()
             .contentType(ContentType.JSON)
             .body(rawJson)
         .when()
             .post("/dq-triage")
         .then()
-            .statusCode(anyOf(equalTo(200), equalTo(201)));
+            .statusCode(anyOf(equalTo(200), equalTo(201)))
+            .extract().body().asString();
+
+        assertMatchesExpected("13-upsert-response.json", actual);
 
         CriteriaQuery query = new CriteriaQuery(
             Criteria.where("uniqueTriageId").is(UNIQUE_TRIAGE_ID));
@@ -437,13 +525,13 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
 
     @Test @Order(14)
     @DisplayName("PUT /dq-triage/{id} → 200, updated businessReason reflected")
-    void shouldUpdateDocument() {
+    void shouldUpdateDocument() throws Exception {
         String updatedJson = rawJson.replace(
             BUSINESS_REASON,
             "Updated reason for testing"
         );
 
-        given()
+        String actual = given()
             .contentType(ContentType.JSON)
             .body(updatedJson)
             .pathParam("id", UNIQUE_TRIAGE_ID)
@@ -452,7 +540,10 @@ class DqViolationTriageRealPayloadIT extends ElasticsearchContainerBase {
         .then()
             .statusCode(200)
             .body("uniqueTriageId",  equalTo(UNIQUE_TRIAGE_ID))
-            .body("businessReason",  equalTo("Updated reason for testing"));
+            .body("businessReason",  equalTo("Updated reason for testing"))
+            .extract().body().asString();
+
+        assertMatchesExpected("14-put-update.json", actual);
     }
 
     // =========================================================================
