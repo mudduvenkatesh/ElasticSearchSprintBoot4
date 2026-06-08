@@ -288,10 +288,9 @@ public class DqViolationTriageService {
             // Compute offendingRecordCount if not already set
             int ruleCount = CollectionUtils.isEmpty(rule.getOffendingRecords())
                     ? 0 : rule.getOffendingRecords().size();
-//            if (rule.getOffendingRecordCount() == 0) {
-//                rule.setOffendingRecordCount(ruleCount);
-//            }
-            //totalRecords += rule.getOffendingRecordCount();
+            if (rule.getOffendingRecordCount() == null) {
+                rule.setOffendingRecordCount(ruleCount);
+            }
         }
 
         //doc.setTotalViolatedRules(rules.size());

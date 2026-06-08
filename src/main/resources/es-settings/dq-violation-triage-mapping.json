@@ -20,6 +20,7 @@
         "offendingRuleSubject":     { "type": "keyword" },
         "offendingRuleLabel":       { "type": "text",    "analyzer": "standard" },
         "offendingRuleLabelKeyword":{ "type": "keyword" },
+        "offendingRecordCount":     { "type": "integer" },
 
 
         "offendingRecords": {
