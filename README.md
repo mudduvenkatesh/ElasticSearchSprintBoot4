@@ -73,7 +73,7 @@ java -jar target/elasticsearch-springboot-1.0.0.jar
 ./mvnw verify -Dsurefire.skip=true -Dit.test=DqViolationTriageRealPayloadIT
 ```
 
-Docker must be running for integration tests — Testcontainers pulls and starts `elasticsearch:8.15.0` automatically.
+Docker must be running for integration tests — Testcontainers pulls and starts `elasticsearch:9.4.2` automatically.
 
 ### Test execution map
 
@@ -86,6 +86,60 @@ Docker must be running for integration tests — Testcontainers pulls and starts
 | `DqViolationTriageRepositoryTest` | surefire (`mvn test`) | No |
 | `ElasticsearchConnectionIT` | failsafe (`mvn verify`) | Yes |
 | `DqViolationTriageRealPayloadIT` | failsafe (`mvn verify`) | Yes |
+
+### Golden-file (snapshot) testing
+
+`DqViolationTriageRealPayloadIT` uses a **capture-on-first-run** pattern to compare every API response against a committed expected JSON file.
+
+#### How it works
+
+```
+First run  → expected file absent  → writes actual response to file (no assertion)
+Every run after → file present → JSONAssert LENIENT comparison
+```
+
+`JSONCompareMode.LENIENT` means:
+- Every field in the expected file must appear in the actual response with the same value — this catches regressions.
+- Extra fields in the actual response are silently allowed — prevents false positives from dynamic fields like `indexedAt` (which is stripped before the file is written).
+
+#### File naming convention
+
+Expected files live in `src/test/resources/expected/` and are numbered to match the `@Order` of the test that produces them:
+
+```
+src/test/resources/expected/
+├── 01-post-create.json            POST /dq-triage              → 201 full document
+├── 02-get-by-id.json              GET  /dq-triage/{id}         → 200 full document
+├── 03-get-by-tracking-id.json     GET  /dq-triage/tracking/{id}→ 200 full document
+├── 05-search-scorecard.json       GET  /search/scorecard        → 200 array
+├── 06-search-steward-page.json    GET  /search/steward          → 200 Page
+├── 07-search-full-text-page.json  GET  /search?q=              → 200 Page
+├── 08-search-rule-label.json      GET  /search/rule-label       → 200 array
+├── 09-search-offending-record.json GET /search/offending-record → 200 array
+├── 10-search-predicate.json       GET  /search/predicate        → 200 array
+├── 11-search-date-range-page.json GET  /search/date-range       → 200 Page
+├── 12-search-high-severity-page.json GET /search/high-severity  → 200 Page
+├── 13-upsert-response.json        POST /dq-triage (re-index)    → 200/201 document
+└── 14-put-update.json             PUT  /dq-triage/{id}          → 200 updated document
+```
+
+Numbers 4, 15, 16, and 17 are omitted because those tests use the `ElasticsearchTemplate` directly (no HTTP response body) or return HTTP 204 (no content).
+
+#### Regenerating expected files after an intentional API change
+
+Delete the affected file(s) and run the integration tests once — the new response is captured automatically and becomes the new baseline:
+
+```bash
+# Regenerate a single file
+rm src/test/resources/expected/02-get-by-id.json
+./mvnw verify -Dsurefire.skip=true
+
+# Regenerate all files
+rm src/test/resources/expected/*.json
+./mvnw verify -Dsurefire.skip=true
+```
+
+Review the newly written files with `git diff` before committing them as the updated baseline.
 
 ## API Reference
 
@@ -212,10 +266,17 @@ src/
 │   ├── application.yml
 │   ├── application-local.yml
 │   └── es-settings/dq-violation-triage-mapping.json
-└── test/java/com/example/search/
-    ├── DqTriageTestFixtures.java   # Shared test data factories
-    ├── controller/
-    ├── service/
-    ├── repository/
-    └── integration/                # Testcontainers-based integration tests
+└── test/
+    ├── java/com/example/search/
+    │   ├── DqTriageTestFixtures.java   # Shared test data factories
+    │   ├── controller/
+    │   ├── service/
+    │   ├── repository/
+    │   └── integration/                # Testcontainers-based integration tests
+    └── resources/
+        ├── fixtures/                   # Input payloads for integration tests
+        │   └── dq-triage-real-payload.json
+        └── expected/                   # Golden-file snapshots (one per API test)
+            ├── 01-post-create.json
+            └── ...                     # 13 files total, numbered by @Order
 ```
